@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+service BancadaService {
+  rpc GetDados(Empty) returns (DadosBancada);
+}
+
+message DadosBancada {
+  int32 id = 1;
+  float temperatura = 2;
+  float umidade = 3;
+  float condutividade = 4;
+}
+
+message Empty {}

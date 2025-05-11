@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+service CalculoService {
+  rpc AdicionarDados(DadosBancada) returns (Resposta);
+  rpc CalcularEstatisticas(Empty) returns (Estatisticas);
+  rpc LimparDados(Empty) returns (Resposta);
+}
+
+message DadosBancada {
+  int32 id = 1;
+  float temperatura = 2;
+  float umidade = 3;
+  float condutividade = 4;
+}
+
+message Estatisticas {
+  double mediaTemperatura = 1;
+  double medianaTemperatura = 2;
+  double mediaUmidade = 3;
+  double medianaUmidade = 4;
+  double mediaCondutividade = 5;
+  double medianaCondutividade = 6;
+}
+
+message Resposta {
+  string mensagem = 1;
+}
+
+message Empty {}
