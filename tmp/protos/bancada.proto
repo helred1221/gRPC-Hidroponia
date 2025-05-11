@@ -1,9 +1,12 @@
 syntax = "proto3";
 
+// Bancada service definition
 service BancadaService {
+  // Sends the Bancada data
   rpc GetDados(Empty) returns (DadosBancada);
 }
 
+// The Response message containing the Bancada structured data.
 message DadosBancada {
   int32 id = 1;
   float temperatura = 2;
@@ -11,4 +14,5 @@ message DadosBancada {
   float condutividade = 4;
 }
 
+// The Request message containing "Empty"
 message Empty {}
