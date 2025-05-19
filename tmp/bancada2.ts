@@ -1,4 +1,4 @@
-import { loadPackageDefinition, Server, ServerCredentials, status, sendUnaryData, ServerUnaryCall } from '@grpc/grpc-js';
+import { loadPackageDefinition, Server, ServerCredentials } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
 import { retornaValorRandom } from './utils';
 
@@ -15,7 +15,7 @@ bancadaServer.addService(bancadaProto.BancadaService.service, {
   // This is the implementation of the service definition on proto bancada file passing random values to the client through the proto buffers
   GetDados: (_: any, callback: any) => {
     callback(null, {
-      id: 1,
+      id: 2,
       temperatura: retornaValorRandom(18, 26),
       umidade: retornaValorRandom(60, 90),
       condutividade: retornaValorRandom(1.2, 2.5)
@@ -24,6 +24,6 @@ bancadaServer.addService(bancadaProto.BancadaService.service, {
 });
 
 // Aqui é criado o bindAsync do servidor para executar qualquer IP, na porta 50051 passando credenciais inseguras como parâmetro.
-bancadaServer.bindAsync('0.0.0.0:50051', ServerCredentials.createInsecure(), () => {
-  console.log('Bancada 1 rodando em 0.0.0.0:50051');
+bancadaServer.bindAsync('0.0.0.0:50052', ServerCredentials.createInsecure(), () => {
+  console.log('Bancada 2 rodando em 0.0.0.0:50052');
 });
