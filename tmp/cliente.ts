@@ -2,15 +2,17 @@ import { loadPackageDefinition, Server, ServerCredentials, status, sendUnaryData
 import { loadSync } from '@grpc/proto-loader';
 import readline from 'readline-sync';
 
-
+// Calculo package definition variable instantiation.
 const calculoDefs = loadSync('./protos/calculo.proto');
+// The calculo package definition Load as a gRPC object hierarchy.
 const calculoProto = loadPackageDefinition(calculoDefs) as any;
 
+// Bancada package definition variable instantiation.
 const bancadaDefs = loadSync('./protos/bancada.proto');
+// The bancada package definition Load as a gRPC object hierarchy.
 const bancadaProto = loadPackageDefinition(bancadaDefs) as any;
 
-
-const calculoClient = new calculoProto.CalculoService(
+const calculoServer = new calculoProto.CalculoService(
   'localhost:50053',
   credentials.createInsecure()
 );
@@ -31,7 +33,7 @@ async function buscarBancada() {
         return resolve(false);
       }
       
-      calculoClient.AdicionarDados(response, (err: any) => {
+      calculoServer.AdicionarDados(response, (err: any) => {
         
         console.log('\nDados coletados:');
         console.log(`- ID: ${response.id}`);
@@ -46,7 +48,7 @@ async function buscarBancada() {
 
 async function exibirEstatisticas() {
   return new Promise((resolve) => {
-    calculoClient.CalcularEstatisticas({}, (err: any, response: any) => {
+    calculoServer.CalcularEstatisticas({}, (err: any, response: any) => {
       if (err) {
         console.error('Erro:', err.message);
         return resolve(false);
@@ -89,7 +91,7 @@ async function main() {
         await exibirEstatisticas();
         break;
       case 3:
-        calculoClient.LimparDados({}, () => {
+        calculoServer.LimparDados({}, () => {
           console.log('Dados limpos com sucesso!');
         });
         break;
