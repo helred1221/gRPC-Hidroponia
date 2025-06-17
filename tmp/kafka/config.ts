@@ -1,20 +1,15 @@
 import { Kafka, Producer, Consumer, KafkaConfig } from 'kafkajs';
 
 const config: KafkaConfig = {
-    brokers: ['localhost:9092']
+    brokers: ['0.0.0.0:9092']
 };
 
 const kafka = new Kafka(config);
 
-const producer: Producer = kafka.producer();
-
-const createConsumer = async (groupId: string) => {
-    const consumer = kafka.consumer({ groupId });
+export async function createConsumer(groupId: string): Promise<Consumer> {
+    const consumer: Consumer = kafka.consumer({ groupId: groupId });
+    await consumer.connect();
     return consumer;
-};
-export {
-    producer,
-    createConsumer
 };
 
 export const createProducer = async (): Promise<Producer> => {
