@@ -3,6 +3,7 @@ import { TOPICS } from '../kafka/config';
 import { loadPackageDefinition, credentials } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
 import readline from 'readline-sync';
+
 interface DadosTemporarios {
     temperatura?: number;
     umidade?: number;
@@ -58,9 +59,9 @@ async function processarDadoCompleto(bancadaId: number) {
             });
         } catch (err) {
             console.error('Erro ao enviar para cálculo:', err);
-        } finally {
-            dadosTemporarios.delete(bancadaId);
-        }
+        } //finally {
+          //  dadosTemporarios.delete(bancadaId);
+        //}
     }
 }
 
@@ -71,7 +72,9 @@ async function verEstatisticas() {
                 console.error('Erro ao obter estatísticas:', err.message);
                 return resolve();
             }
-            
+            console.log('elonmusk')
+            console.log(response)
+            console.log('elonmusk')
             console.log('\n=== ESTATÍSTICAS ===');
             console.log('Temperatura:');
             console.log(`  Média: ${response.mediaTemperatura?.toFixed(2) || 'N/A'}°C`);
@@ -127,6 +130,8 @@ async function main() {
                     if (!dadosTemporarios.has(bancadaId)) {
                         dadosTemporarios.set(bancadaId, {});
                     }
+
+                    console.log(dadosTemporarios)
 
                     const dadosBancada = dadosTemporarios.get(bancadaId)!;
 

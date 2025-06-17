@@ -1,7 +1,7 @@
 import { Kafka, Producer, Consumer, KafkaConfig } from 'kafkajs';
 
 const config: KafkaConfig = {
-    brokers: ['0.0.0.0:9092']
+    brokers: ['localhost:9092']
 };
 
 const kafka = new Kafka(config);
