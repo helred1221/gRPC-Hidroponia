@@ -3,8 +3,6 @@ import { TOPICS } from '../kafka/config';
 import { loadPackageDefinition, credentials } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
 import readline from 'readline-sync';
-
-
 interface DadosTemporarios {
     temperatura?: number;
     umidade?: number;
