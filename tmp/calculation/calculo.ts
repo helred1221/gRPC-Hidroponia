@@ -26,14 +26,16 @@ async function run() {
         topic: 'Calculados',
         messages: [{
           key: 'Cálculo',
-          value: JSON.stringify(dados.length > 0 ? {dados} : 'Não há dados para calcular')
+          value: JSON.stringify(dados.length > 0 ? { dados } : { mensagem: 'Não há dados para calcular' })
         }]
       });
-      dados.length < 0 ? console.log('Servidor de cálculos publicou dados') : console.log('Não há dados para calcular');
+      console.log(dados.length > 0 
+        ? 'Servidor de cálculos publicou dados' 
+        : 'Não há dados para calcular');
     } catch(err) {
       console.error('Erro na publicação de dados:', err);
     }
-  }, 5000); // publica a cada 5 segundo ou seja cria os dados automáticos sem intervenção
+  }, 5000);
 }
 
 calculoServer.addService(calculoProto.CalculoService.service, {
@@ -64,7 +66,7 @@ calculoServer.addService(calculoProto.CalculoService.service, {
         mediaCondutividade: calcularMedia(dados.map(d => d.condutividade)),
         medianaCondutividade: calcularMediana(dados.map(d => d.condutividade))
       };
-      console.log(dados)
+
       callback(null, stats);
     } catch (error) {
       callback({
@@ -80,8 +82,11 @@ calculoServer.addService(calculoProto.CalculoService.service, {
   }
 });
 
-calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), () => {
-  console.log('Servidor de cálculo rodando em 0.0.0.0:50053');
+calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), (err, port) => {
+  if (err) {
+    console.error('Erro ao iniciar servidor:', err);
+    return;
+  }
+  console.log(`Servidor de cálculo rodando em 0.0.0.0:${port}`);
+  run().catch(console.error);
 });
-
-run().catch(console.error);

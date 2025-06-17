@@ -15,7 +15,6 @@ const dadosTemporarios: Map<number, DadosTemporarios> = new Map();
 
 const calculoDefs = loadSync('./protos/calculo.proto');
 const calculoProto = loadPackageDefinition(calculoDefs) as any;
-//ip e porta do servidor de cálculo
 const calculoClient = new calculoProto.CalculoService(
     'localhost:50053',
     credentials.createInsecure()
@@ -25,9 +24,7 @@ const bancadasAssinadas: Set<number> = new Set();
 
 async function processarDadoCompleto(bancadaId: number) {
     const dados = dadosTemporarios.get(bancadaId);
-    
     if (!dados) return;
-
 
     const dezSegundosAtras = new Date(Date.now() - 10000);
     if (dados.temperatura !== undefined && 
@@ -59,9 +56,7 @@ async function processarDadoCompleto(bancadaId: number) {
             });
         } catch (err) {
             console.error('Erro ao enviar para cálculo:', err);
-        } //finally {
-          //  dadosTemporarios.delete(bancadaId);
-        //}
+        }
     }
 }
 
@@ -72,9 +67,6 @@ async function verEstatisticas() {
                 console.error('Erro ao obter estatísticas:', err.message);
                 return resolve();
             }
-            console.log('elonmusk')
-            console.log(response)
-            console.log('elonmusk')
             console.log('\n=== ESTATÍSTICAS ===');
             console.log('Temperatura:');
             console.log(`  Média: ${response.mediaTemperatura?.toFixed(2) || 'N/A'}°C`);
@@ -106,32 +98,48 @@ async function limparDados() {
     });
 }
 
+// [Adicione no início do arquivo]
+console.log('[INIT] Iniciando cliente...');
+
 async function main() {
-    console.log('Conectando ao broker Kafka...');
-    const consumer = await createConsumer(`cliente_${Date.now()}`);
-    
+    console.log('[MAIN] Conectando ao broker Kafka...');
+    const consumer = await createConsumer(`grupo-cliente-fixo`);
+    console.log('[MAIN] Consumer criado:', consumer);
+
     try {
+        console.log('[MAIN] Tentando subscrever nos tópicos:', Object.values(TOPICS));
         await consumer.subscribe({ 
             topics: Object.values(TOPICS),
             fromBeginning: true 
         });
+        console.log('[MAIN] Subscribe realizado com sucesso');
 
-        console.log('Iniciando consumo de mensagens...');
+        console.log('[MAIN] Iniciando consumo...');
         await consumer.run({
-            eachMessage: async ({ topic, message }) => {
+            eachMessage: async ({ topic, partition, message }) => {
+                console.log(`[KAFKA] Mensagem recebida - Tópico: ${topic}, Partição: ${partition}, Offset: ${message.offset}`);
+                
                 try {
-                    if (!message.value) return;
+                    if (!message.value) {
+                        console.log('[KAFKA] Mensagem sem valor');
+                        return;
+                    }
                     
+                    console.log('[KAFKA] Raw message:', message.value.toString());
                     const data = JSON.parse(message.value.toString());
+                    console.log('[KAFKA] Mensagem parseada:', data);
+
                     const bancadaId = data.bancadaId;
-                    
-                    if (!bancadasAssinadas.has(bancadaId)) return;
+                    console.log(`[PROCESS] Processando bancada ${bancadaId} (Assinadas: ${Array.from(bancadasAssinadas).join(', ') || 'Nenhuma'})`);
+
+                    if (!bancadasAssinadas.has(bancadaId)) {
+                        console.log(`[PROCESS] Bancada ${bancadaId} não está assinada`);
+                        return;
+                    }
 
                     if (!dadosTemporarios.has(bancadaId)) {
                         dadosTemporarios.set(bancadaId, {});
                     }
-
-                    console.log(dadosTemporarios)
 
                     const dadosBancada = dadosTemporarios.get(bancadaId)!;
 
@@ -148,9 +156,6 @@ async function main() {
                     }
 
                     dadosBancada.lastUpdate = new Date();
-                    dadosTemporarios.set(bancadaId, dadosBancada);
-
-
                     await processarDadoCompleto(bancadaId);
                 } catch (error) {
                     console.error('Erro ao processar mensagem:', error);
@@ -221,7 +226,4 @@ async function main() {
     }
 }
 
-main().catch(async (error) => {
-    console.error('Erro fatal:', error);
-    process.exit(1);
-});
+main().catch(console.error);
