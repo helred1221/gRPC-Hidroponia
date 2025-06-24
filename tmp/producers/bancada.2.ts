@@ -1,26 +1,40 @@
 import { producer } from "../kafka/config";
+import { retornaValorRandom } from "../calculation/utils";
 
-const bancada2 = (async (): Promise<void> => {
-  try {
-    console.clear();
-    console.log("Iniciando conexão");
-    await producer.connect();
+interface Hidroponia {
+    temperatura: number;
+    condutividade: number;
+    umidade: number;
+}
 
-    console.log("Produzido dados da bancada 2");
-    await producer.send({
-      topic: "bancada_2",
-      messages: [
-        { key: "message_from", value: "Bancada 2" },
-        { key: "time", value: Date.now().toString() },
-        { key: "conteudo", value: "temp, umi, cond" },
-      ],
-    });
+const dados: Hidroponia = {
+    temperatura: retornaValorRandom(1, 100),
+    condutividade: retornaValorRandom(5, 50),
+    umidade: retornaValorRandom(10, 60)
+};
 
-    await producer.disconnect();
-    console.log("Mensagens enviadas e conexão encerrada.");
-  } catch (error) {
-    console.error("Erro no producer:", error);
-  }
-})();
-
-export default bancada2;
+const bancada1 = (async (): Promise<void> => {
+    try {
+      console.clear();
+      console.log("Iniciando conexão");
+      await producer.connect();
+  
+      console.log("Produzido dados Bancada 2");
+      await producer.send({
+        topic: "bancada_2",
+        messages: [
+          { key: "Mensagem de: ", value: "Bancada Hidropônica 2" },
+          { key: "Temperatura: ", value: dados.temperatura.toString() },
+          { key: "Condutividade: ", value: dados.condutividade.toString() },
+          { key: "Umidade: ", value: dados.umidade.toString() },
+        ],
+      });
+  
+      await producer.disconnect();
+      console.log("Mensagens enviadas e conexão encerrada.");
+    } catch (error) {
+      console.error("Erro no producer:", error);
+    }
+  })();
+  
+  export default bancada1;

@@ -3,27 +3,97 @@ import { cliente } from "../kafka/config";
 import { EachMessagePayload } from "kafkajs";
 import { credentials, loadPackageDefinition } from "@grpc/grpc-js";
 
-const calculoDefs = loadSync('../protos/calculo.proto');
+const calculoDefs = loadSync("./protos/calculo.proto");
 const calculoProto = loadPackageDefinition(calculoDefs) as any;
 const calculoClient = new calculoProto.CalculoService(
     'localhost:50053',
     credentials.createInsecure()
 );
 
+interface DadoBancada {
+    id: number;
+    temperatura?: number;
+    umidade?: number;
+    condutividade?: number;
+}
+
+const dadosTemporarios: Map<number, DadoBancada> = new Map();
+
 const consumer = (async (): Promise<void> => {
   try {
     await cliente.connect();
     await cliente.subscribe({
-      topic: "bancada_1",
+      topics: ["bancada_1", "bancada_2"],
       fromBeginning: true,
     });
 
     console.clear();
     console.log("Iniciando cliente e aguardando dados");
+    
     await cliente.run({
       eachMessage: async ({ topic, message }: EachMessagePayload): Promise<void> => {
-        const mensagem = `${topic}\n[${message.key} | ${message.value}] \n${message.timestamp}`;
-        console.log(`${mensagem}`);
+        try {
+            if (!message.value || !message.key) return;
+            
+            const valor = message.value.toString();
+            const chave = message.key.toString();
+            const bancadaId = parseInt(topic.split('_')[1]); // pega o id da bancada
+            
+            if (!dadosTemporarios.has(bancadaId)) { // nos dados temporários vou definir uma identificação nele para depois excluir
+                dadosTemporarios.set(bancadaId, { id: bancadaId });
+            }
+
+            const dadosBancada = dadosTemporarios.get(bancadaId)!;
+
+            switch (chave) {
+                case 'Temperatura: ':
+                    dadosBancada.temperatura = parseFloat(valor);
+                    console.log(`Bancada ${bancadaId} - Temperatura: ${valor}°C`);
+                    break;
+                case 'Umidade: ':
+                    dadosBancada.umidade = parseFloat(valor);
+                    console.log(`Bancada ${bancadaId} - Umidade: ${valor}%`);
+                    break;
+                case 'Condutividade: ':
+                    dadosBancada.condutividade = parseFloat(valor);
+                    console.log(`Bancada ${bancadaId} - Condutividade: ${valor}`);
+                    break;
+            }
+
+            if (dadosBancada.temperatura !== undefined &&
+                dadosBancada.umidade !== undefined &&
+                dadosBancada.condutividade !== undefined) {
+                
+                console.log(`\n=== Dados completos da bancada ${bancadaId} ===`);
+                console.log(`Temperatura: ${dadosBancada.temperatura}°C`);
+                console.log(`Umidade: ${dadosBancada.umidade}%`);
+                console.log(`Condutividade: ${dadosBancada.condutividade}`);
+                console.log('Enviando para cálculo...\n');
+                
+                await new Promise<void>((resolve, reject) => {
+                    calculoClient.AdicionarDados({
+                        id: bancadaId,
+                        temperatura: dadosBancada.temperatura,
+                        umidade: dadosBancada.umidade,
+                        condutividade: dadosBancada.condutividade
+                    }, (err: any) => {
+                        if (err) {
+                            console.error(`Erro ao enviar dados da bancada ${bancadaId}:`, err.message);
+                            reject(err);
+                        } else {
+                            console.log(`✓ Dados da bancada ${bancadaId} enviados para cálculo`);
+                            resolve();
+                        }
+                    });
+                });
+
+                await verEstatisticas();
+                
+                dadosTemporarios.delete(bancadaId);
+            }
+        } catch (error) {
+            console.error("Erro ao processar mensagem:", error);
+        }
       },
     });
   } catch (error) {
@@ -38,20 +108,21 @@ async function verEstatisticas() {
                 console.error('Erro ao obter estatísticas:', err.message);
                 return resolve();
             }
-            // 
-            console.log('\n=== ESTATÍSTICAS ===');
-            console.log('Temperatura:');
-            console.log(`  Média: ${response.mediaTemperatura?.toFixed(2) || 'N/A'}°C`);
-            console.log(`  Mediana: ${response.medianaTemperatura?.toFixed(2) || 'N/A'}°C`);
-            // 
-            console.log('\nUmidade:');
-            console.log(`  Média: ${response.mediaUmidade?.toFixed(2) || 'N/A'}%`);
-            console.log(`  Mediana: ${response.medianaUmidade?.toFixed(2) || 'N/A'}%`);
-            // 
-            console.log('\nCondutividade:');
-            console.log(`  Média: ${response.mediaCondutividade?.toFixed(2) || 'N/A'}`);
-            console.log(`  Mediana: ${response.medianaCondutividade?.toFixed(2) || 'N/A'}`);
-            // 
+            
+            console.log('\n=== ESTATÍSTICAS ATUALIZADAS ===');
+            console.log('📊 Temperatura:');
+            console.log(`   Média: ${response.mediaTemperatura?.toFixed(2) || 'N/A'}°C`);
+            console.log(`   Mediana: ${response.medianaTemperatura?.toFixed(2) || 'N/A'}°C`);
+            
+            console.log('\n💧 Umidade:');
+            console.log(`   Média: ${response.mediaUmidade?.toFixed(2) || 'N/A'}%`);
+            console.log(`   Mediana: ${response.medianaUmidade?.toFixed(2) || 'N/A'}%`);
+            
+            console.log('\n⚡ Condutividade:');
+            console.log(`   Média: ${response.mediaCondutividade?.toFixed(2) || 'N/A'}`);
+            console.log(`   Mediana: ${response.medianaCondutividade?.toFixed(2) || 'N/A'}`);
+            console.log('=====================================\n');
+            
             resolve();
         });
     });

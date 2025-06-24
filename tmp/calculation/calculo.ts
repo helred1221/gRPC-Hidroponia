@@ -3,7 +3,6 @@ import { loadSync } from '@grpc/proto-loader';
 import { calcularMedia, calcularMediana } from './utils';
 import { producer } from "../kafka/config";
 
-
 interface DadoBancada {
   id: number;
   temperatura: number;
@@ -16,50 +15,60 @@ let dados: DadoBancada[] = [];
 const calculoDefs = loadSync('./protos/calculo.proto');
 const calculoProto = loadPackageDefinition(calculoDefs) as any;
 
-const calculo_producer = (async (): Promise<void> => {
-  try {
-    console.clear();
-    console.log("Iniciando conexão");
-    await producer.connect();
-
-    console.log("Produzido dados do servidor de cálculo.");
-    await producer.send({
-      topic: "calculos",
-      messages: [
-        { key: "message_from", value: "calculo_producer" },
-        { key: "time", value: Date.now().toString() },
-        { key: "conteudo", value: "temp, umi, cond" },
-      ],
-    });
-
-    await producer.disconnect();
-    console.log("Mensagens enviadas e conexão encerrada.");
-  } catch (error) {
-    console.error("Erro no producer:", error);
-  }
-})();
-
-export default calculo_producer;
-
 const calculoServer = new Server();
 
 async function run() {
-  const calculos = await createProducer();
+  try {
+    await producer.connect();
+    console.log('Producer conectado para publicar cálculos');
 
-  setInterval(async () => {
-    try {
-      await calculos.send({
-        topic: 'Calculados',
-        messages: [{
-          key: 'Cálculo',
-          value: JSON.stringify(dados.length > 0 ? {dados} : 'Não há dados para calcular')
-        }]
-      });
-      dados.length < 0 ? console.log('Servidor de cálculos publicou dados') : console.log('Não há dados para calcular');
-    } catch(err) {
-      console.error('Erro na publicação de dados:', err);
-    }
-  }, 5000); // publica a cada 5 segundo ou seja cria os dados automáticos sem intervenção
+    setInterval(async () => {
+      try {
+        if (dados.length > 0) {
+          const temperaturas = dados.map(d => d.temperatura);
+          const umidades = dados.map(d => d.umidade);
+          const condutividades = dados.map(d => d.condutividade);
+
+          const resultado = {
+            media: {
+              temperatura: calcularMedia(temperaturas),
+              umidade: calcularMedia(umidades),
+              condutividade: calcularMedia(condutividades),
+            },
+            mediana: {
+              temperatura: calcularMediana(temperaturas),
+              umidade: calcularMediana(umidades),
+              condutividade: calcularMediana(condutividades),
+            }
+          };
+
+          await producer.send({
+            topic: 'Calculados',
+            messages: [{
+              key: 'Cálculo',
+              value: JSON.stringify(resultado),
+            }]
+          });
+
+          console.log('Cálculos enviados:', resultado);
+        } else {
+          await producer.send({
+            topic: 'Calculados',
+            messages: [{
+              key: 'Cálculo',
+              value: JSON.stringify('Não há dados para calcular'),
+            }]
+          });
+
+          console.log('Nenhum dado para calcular');
+        }
+      } catch (err) {
+        console.error('Erro ao enviar cálculo:', err);
+      }
+    }, 5000);
+  } catch (err) {
+    console.error('Erro ao conectar producer:', err);
+  }
 }
 
 calculoServer.addService(calculoProto.CalculoService.service, {
@@ -90,7 +99,7 @@ calculoServer.addService(calculoProto.CalculoService.service, {
         mediaCondutividade: calcularMedia(dados.map(d => d.condutividade)),
         medianaCondutividade: calcularMediana(dados.map(d => d.condutividade))
       };
-      console.log(dados)
+      console.log(dados);
       callback(null, stats);
     } catch (error) {
       callback({
@@ -108,6 +117,5 @@ calculoServer.addService(calculoProto.CalculoService.service, {
 
 calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), () => {
   console.log('Servidor de cálculo rodando em 0.0.0.0:50053');
+  run().catch(console.error);
 });
-
-run().catch(console.error);
