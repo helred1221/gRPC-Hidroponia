@@ -1,22 +1,18 @@
 import { Kafka, Producer, Consumer, KafkaConfig } from 'kafkajs';
 
 const config: KafkaConfig = {
-    brokers: ['0.0.0.0:9092']
+    brokers: ['localhost:9092']
 };
 
 const kafka = new Kafka(config);
 
-const bancada1: Producer = kafka.producer();
-const bancada2: Producer = kafka.producer();
-const bancada3: Producer = kafka.producer();
+const producer: Producer = kafka.producer();
 
 const cliente: Consumer = kafka.consumer({ groupId: "cliente1" });
 const web: Consumer = kafka.consumer({ groupId: "web1"});
 
 export {
-    bancada1,
-    bancada2,
-    bancada3,
+    producer,
     cliente,
     web
 }

@@ -1,49 +1,40 @@
-import { createProducer } from '../kafka/config';
-import { TOPICS } from '../kafka/config';
-import { retornaValorRandom } from '../calculation/utils';
+import { producer } from "../kafka/config";
+import { retornaValorRandom } from "../calculation/utils";
 
-const BANCADA_ID = 1;
-
-async function run() {
-    const producer = await createProducer();
-    
-    setInterval(async () => {
-        const temperatura = retornaValorRandom(18, 26);
-        const umidade = retornaValorRandom(60, 90);
-        const condutividade = retornaValorRandom(1.2, 2.5);
-        
-        console.log(temperatura,umidade)
-        try { // aqui abaixo publica :D
-            
-            await producer.send({
-                topic: TOPICS.TEMPERATURA,
-                messages: [{
-                    key: `bancada_${BANCADA_ID}`,
-                    value: JSON.stringify({ bancadaId: BANCADA_ID, valor: temperatura })
-                }]
-            });
-            
-            await producer.send({
-                topic: TOPICS.UMIDADE,
-                messages: [{
-                    key: `bancada_${BANCADA_ID}`,
-                    value: JSON.stringify({ bancadaId: BANCADA_ID, valor: umidade })
-                }]
-            });
-            
-            await producer.send({
-                topic: TOPICS.CONDUTIVIDADE,
-                messages: [{
-                    key: `bancada_${BANCADA_ID}`,
-                    value: JSON.stringify({ bancadaId: BANCADA_ID, valor: condutividade })
-                }]
-            });
-            
-            console.log(`Bancada ${BANCADA_ID} publicou dados`);
-        } catch (err) {
-            console.error(`Erro na bancada ${BANCADA_ID}:`, err);
-        }
-    }, 5000); // publica a cada 5 segundo ou seja cria os dados automáticos sem intervenção
+interface Hidroponia {
+    temperatura: number;
+    condutividade: number;
+    umidade: number;
 }
 
-run().catch(console.error);
+const dados: Hidroponia = {
+    temperatura: retornaValorRandom(1, 100),
+    condutividade: retornaValorRandom(5, 50),
+    umidade: retornaValorRandom(10, 60)
+};
+
+const bancada1 = (async (): Promise<void> => {
+    try {
+      console.clear();
+      console.log("Iniciando conexão");
+      await producer.connect();
+  
+      console.log("Produzido dados Bancada 1");
+      await producer.send({
+        topic: "bancada_1",
+        messages: [
+          { key: "Mensagem de: ", value: "Bancada Hidropônica 1" },
+          { key: "Temperatura: ", value: dados.temperatura.toString() },
+          { key: "Condutividade: ", value: dados.condutividade.toString() },
+          { key: "Umidade: ", value: dados.umidade.toString() },
+        ],
+      });
+  
+      await producer.disconnect();
+      console.log("Mensagens enviadas e conexão encerrada.");
+    } catch (error) {
+      console.error("Erro no producer:", error);
+    }
+  })();
+  
+  export default bancada1;
