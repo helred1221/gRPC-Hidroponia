@@ -1,7 +1,8 @@
 import { loadPackageDefinition, Server, ServerCredentials } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
 import { calcularMedia, calcularMediana } from './utils';
-import { createProducer } from '../kafka/config';
+import { producer } from "../kafka/config";
+
 
 interface DadoBancada {
   id: number;
@@ -14,6 +15,31 @@ let dados: DadoBancada[] = [];
 
 const calculoDefs = loadSync('./protos/calculo.proto');
 const calculoProto = loadPackageDefinition(calculoDefs) as any;
+
+const calculo_producer = (async (): Promise<void> => {
+  try {
+    console.clear();
+    console.log("Iniciando conexão");
+    await producer.connect();
+
+    console.log("Produzido dados do servidor de cálculo.");
+    await producer.send({
+      topic: "calculos",
+      messages: [
+        { key: "message_from", value: "calculo_producer" },
+        { key: "time", value: Date.now().toString() },
+        { key: "conteudo", value: "temp, umi, cond" },
+      ],
+    });
+
+    await producer.disconnect();
+    console.log("Mensagens enviadas e conexão encerrada.");
+  } catch (error) {
+    console.error("Erro no producer:", error);
+  }
+})();
+
+export default calculo_producer;
 
 const calculoServer = new Server();
 

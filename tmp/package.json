@@ -6,8 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "1": "npx ts-node ./producers/bancada.1.ts",
-    "2": "npx ts-node ./calculation/calculo.ts",
-    "3": "npx ts-node ./consumers/cliente.ts"
+    "2": "npx ts-node ./producers/bancada.2.ts",
+    "3": "npx ts-node ./calculation/calculo.ts",
+    "4": "npx ts-node ./consumers/cliente.ts"
   },
   "keywords": [],
   "author": "",
