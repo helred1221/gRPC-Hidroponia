@@ -109,22 +109,6 @@ async function verEstatisticas() {
                 return resolve();
             }
             
-<<<<<<< HEAD
-            console.log('\n=== ESTATÍSTICAS ATUALIZADAS ===');
-            console.log('📊 Temperatura:');
-            console.log(`   Média: ${response.mediaTemperatura?.toFixed(2) || 'N/A'}°C`);
-            console.log(`   Mediana: ${response.medianaTemperatura?.toFixed(2) || 'N/A'}°C`);
-            
-            console.log('\n💧 Umidade:');
-            console.log(`   Média: ${response.mediaUmidade?.toFixed(2) || 'N/A'}%`);
-            console.log(`   Mediana: ${response.medianaUmidade?.toFixed(2) || 'N/A'}%`);
-            
-            console.log('\n⚡ Condutividade:');
-            console.log(`   Média: ${response.mediaCondutividade?.toFixed(2) || 'N/A'}`);
-            console.log(`   Mediana: ${response.medianaCondutividade?.toFixed(2) || 'N/A'}`);
-            console.log('=====================================\n');
-            
-=======
             console.log('\n=== ESTATÍSTICAS ===');
             console.log('Temperatura:');
             console.log(`  Média: ${response.mediaTemperatura?.toFixed(2) || 'N/A'}°C`);
@@ -138,7 +122,6 @@ async function verEstatisticas() {
             console.log(`  Média: ${response.mediaCondutividade?.toFixed(2) || 'N/A'}`);
             console.log(`  Mediana: ${response.medianaCondutividade?.toFixed(2) || 'N/A'}`);
             // 
->>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
             resolve();
         });
     });

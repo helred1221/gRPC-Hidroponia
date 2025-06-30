@@ -22,7 +22,6 @@ async function run() {
     await producer.connect();
     console.log('Producer conectado para publicar cálculos');
 
-<<<<<<< HEAD
     setInterval(async () => {
       try {
         if (dados.length > 0) {
@@ -70,24 +69,6 @@ async function run() {
   } catch (err) {
     console.error('Erro ao conectar producer:', err);
   }
-=======
-  setInterval(async () => {
-    try {
-      await calculos.send({
-        topic: 'Calculados',
-        messages: [{
-          key: 'Cálculo',
-          value: JSON.stringify(dados.length > 0 ? { dados } : { mensagem: 'Não há dados para calcular' })
-        }]
-      });
-      console.log(dados.length > 0 
-        ? 'Servidor de cálculos publicou dados' 
-        : 'Não há dados para calcular');
-    } catch(err) {
-      console.error('Erro na publicação de dados:', err);
-    }
-  }, 5000);
->>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
 }
 
 calculoServer.addService(calculoProto.CalculoService.service, {
@@ -118,11 +99,6 @@ calculoServer.addService(calculoProto.CalculoService.service, {
         mediaCondutividade: calcularMedia(dados.map(d => d.condutividade)),
         medianaCondutividade: calcularMediana(dados.map(d => d.condutividade))
       };
-<<<<<<< HEAD
-      console.log(dados);
-=======
-
->>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
       callback(null, stats);
     } catch (error) {
       callback({
@@ -138,16 +114,11 @@ calculoServer.addService(calculoProto.CalculoService.service, {
   }
 });
 
-<<<<<<< HEAD
-calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), () => {
-  console.log('Servidor de cálculo rodando em 0.0.0.0:50053');
-=======
 calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), (err, port) => {
   if (err) {
     console.error('Erro ao iniciar servidor:', err);
     return;
   }
   console.log(`Servidor de cálculo rodando em 0.0.0.0:${port}`);
->>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
   run().catch(console.error);
 });
