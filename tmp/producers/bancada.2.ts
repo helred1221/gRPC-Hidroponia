@@ -19,11 +19,11 @@ const bancada1 = (async (): Promise<void> => {
       console.log("Iniciando conexão");
       await producer.connect();
   
-      console.log("Produzido dados Bancada 1");
+      console.log("Produzido dados Bancada 2");
       await producer.send({
-        topic: "bancada_1",
+        topic: "bancada_2",
         messages: [
-          { key: "Mensagem de: ", value: "Bancada Hidropônica 1" },
+          { key: "Mensagem de: ", value: "Bancada Hidropônica 2" },
           { key: "Temperatura: ", value: dados.temperatura.toString() },
           { key: "Condutividade: ", value: dados.condutividade.toString() },
           { key: "Umidade: ", value: dados.umidade.toString() },

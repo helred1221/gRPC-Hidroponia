@@ -1,7 +1,7 @@
 import { loadPackageDefinition, Server, ServerCredentials } from '@grpc/grpc-js';
 import { loadSync } from '@grpc/proto-loader';
 import { calcularMedia, calcularMediana } from './utils';
-import { createProducer } from '../kafka/config';
+import { producer } from "../kafka/config";
 
 interface DadoBancada {
   id: number;
@@ -18,8 +18,59 @@ const calculoProto = loadPackageDefinition(calculoDefs) as any;
 const calculoServer = new Server();
 
 async function run() {
-  const calculos = await createProducer();
+  try {
+    await producer.connect();
+    console.log('Producer conectado para publicar cálculos');
 
+<<<<<<< HEAD
+    setInterval(async () => {
+      try {
+        if (dados.length > 0) {
+          const temperaturas = dados.map(d => d.temperatura);
+          const umidades = dados.map(d => d.umidade);
+          const condutividades = dados.map(d => d.condutividade);
+
+          const resultado = {
+            media: {
+              temperatura: calcularMedia(temperaturas),
+              umidade: calcularMedia(umidades),
+              condutividade: calcularMedia(condutividades),
+            },
+            mediana: {
+              temperatura: calcularMediana(temperaturas),
+              umidade: calcularMediana(umidades),
+              condutividade: calcularMediana(condutividades),
+            }
+          };
+
+          await producer.send({
+            topic: 'Calculados',
+            messages: [{
+              key: 'Cálculo',
+              value: JSON.stringify(resultado),
+            }]
+          });
+
+          console.log('Cálculos enviados:', resultado);
+        } else {
+          await producer.send({
+            topic: 'Calculados',
+            messages: [{
+              key: 'Cálculo',
+              value: JSON.stringify('Não há dados para calcular'),
+            }]
+          });
+
+          console.log('Nenhum dado para calcular');
+        }
+      } catch (err) {
+        console.error('Erro ao enviar cálculo:', err);
+      }
+    }, 5000);
+  } catch (err) {
+    console.error('Erro ao conectar producer:', err);
+  }
+=======
   setInterval(async () => {
     try {
       await calculos.send({
@@ -36,6 +87,7 @@ async function run() {
       console.error('Erro na publicação de dados:', err);
     }
   }, 5000);
+>>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
 }
 
 calculoServer.addService(calculoProto.CalculoService.service, {
@@ -66,7 +118,11 @@ calculoServer.addService(calculoProto.CalculoService.service, {
         mediaCondutividade: calcularMedia(dados.map(d => d.condutividade)),
         medianaCondutividade: calcularMediana(dados.map(d => d.condutividade))
       };
+<<<<<<< HEAD
+      console.log(dados);
+=======
 
+>>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
       callback(null, stats);
     } catch (error) {
       callback({
@@ -82,11 +138,16 @@ calculoServer.addService(calculoProto.CalculoService.service, {
   }
 });
 
+<<<<<<< HEAD
+calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), () => {
+  console.log('Servidor de cálculo rodando em 0.0.0.0:50053');
+=======
 calculoServer.bindAsync('0.0.0.0:50053', ServerCredentials.createInsecure(), (err, port) => {
   if (err) {
     console.error('Erro ao iniciar servidor:', err);
     return;
   }
   console.log(`Servidor de cálculo rodando em 0.0.0.0:${port}`);
+>>>>>>> e37849c60e4fbf8fb73ea91315f51f1938c40e2d
   run().catch(console.error);
 });

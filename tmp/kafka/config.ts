@@ -6,21 +6,33 @@ const config: KafkaConfig = {
 
 const kafka = new Kafka(config);
 
-export async function createConsumer(groupId: string): Promise<Consumer> {
-    const consumer: Consumer = kafka.consumer({ groupId: groupId });
-    await consumer.connect();
-    return consumer;
-};
+const producer: Producer = kafka.producer();
 
-export const createProducer = async (): Promise<Producer> => {
-    const producer = kafka.producer();
-    await producer.connect();
-    return producer;
-};
+const cliente: Consumer = kafka.consumer({ groupId: "cliente1" });
+const web: Consumer = kafka.consumer({ groupId: "web1"});
 
-// Tópicos criados e exportados para uso em outros módulos
-export const TOPICS = {
-    TEMPERATURA: 'hidroponia_temperatura',
-    UMIDADE: 'hidroponia_umidade',
-    CONDUTIVIDADE: 'hidroponia_condutividade'
-};
+export {
+    producer,
+    cliente,
+    web
+}
+
+
+// export async function createConsumer(groupId: string): Promise<Consumer> {
+    // const consumer: Consumer = kafka.consumer({ groupId: groupId });
+    // await consumer.connect();
+    // return consumer;
+// };
+
+// export const createProducer = async (): Promise<Producer> => {
+    // const producer = kafka.producer();
+    // await producer.connect();
+    // return producer;
+// };
+
+// // Tópicos criados e exportados para uso em outros módulos
+// export const TOPICS = {
+    // TEMPERATURA: 'hidroponia_temperatura',
+    // UMIDADE: 'hidroponia_umidade',
+    // CONDUTIVIDADE: 'hidroponia_condutividade'
+// };
